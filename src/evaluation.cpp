@@ -754,17 +754,10 @@ Value Apply::eval(Assoc &e) {
 }
 
 Value Define::eval(Assoc &env) {
-    // First, create a placeholder binding for recursion support
-    Value existing = find(var, env);
-    if (existing.get() == nullptr) {
-        // Create placeholder
-        modify(var, Value(nullptr), env);
-    }
-
     // Evaluate the expression
     Value val = e->eval(env);
 
-    // Update the binding
+    // Update or create the binding
     modify(var, val, env);
 
     return VoidV();
@@ -790,7 +783,7 @@ Value Letrec::eval(Assoc &env) {
     // Create new environment with placeholder bindings
     Assoc new_env = env;
     for (auto& binding : bind) {
-        new_env = extend(binding.first, Value(nullptr), new_env);
+        new_env = extend(binding.first, VoidV(), new_env);
     }
 
     // Evaluate all binding values in the new environment
