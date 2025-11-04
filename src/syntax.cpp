@@ -132,6 +132,14 @@ Syntax createIdentifierSyntax(const std::string &s) {
 
 // no leading space
 Syntax readItem(std::istream &is) {
+  // Check for EOF
+  if (is.peek() == EOF) {
+    // Return exit command to terminate REPL
+    List *exit_list = new List();
+    exit_list->stxs.push_back(Syntax(new SymbolSyntax("exit")));
+    return Syntax(exit_list);
+  }
+
   if (is.peek() == '(' || is.peek() == '[') {
     is.get();
     return readList(is);
@@ -141,12 +149,12 @@ Syntax readItem(std::istream &is) {
     is.get();
     // Read syntax element after single quote
     Syntax quoted_syntax = readItem(is);
-    
+
     // Create list structure for (quote <syntax>)
     List *quote_list = new List();
     quote_list->stxs.push_back(Syntax(new SymbolSyntax("quote")));
     quote_list->stxs.push_back(quoted_syntax);
-    
+
     return Syntax(quote_list);
   }
   // Handle string literals
@@ -175,13 +183,13 @@ Syntax readItem(std::istream &is) {
     }
     return Syntax(new StringSyntax(str));
   }
-  
+
   // Read token
   std::string s;
   do {
     int c = is.peek();
     if (c == '(' || c == ')' ||
-        c == '[' || c == ']' || 
+        c == '[' || c == ']' ||
         c == ';' ||  // Add semicolon as delimiter
         isspace(c) ||
         c == EOF)
@@ -189,28 +197,28 @@ Syntax readItem(std::istream &is) {
     is.get();
     s.push_back(c);
   } while (true);
-  
+
   // Try parsing as rational first
   int numerator, denominator;
   if (tryParseRational(s, numerator, denominator)) {
     return Syntax(new RationalSyntax(numerator, denominator));
   }
-  
+
   // Try parsing as integer
   int number_value;
   if (tryParseNumber(s, number_value)) {
     return Syntax(new Number(number_value));
   }
-  
+
   // Not a number, treat as identifier/symbol
   return createIdentifierSyntax(s);
 }
 
 Syntax readList(std::istream &is) {
     List *stx = new List();
-    while (readSpace(is).peek() != ')' && readSpace(is).peek() != ')')
+    while (readSpace(is).peek() != ')' && readSpace(is).peek() != ']' && readSpace(is).peek() != EOF)
         stx->stxs.push_back(readItem(is));
-    is.get(); // ')'
+    is.get(); // ')' or ']'
     return Syntax(stx);
 }
 
