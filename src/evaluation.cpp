@@ -101,6 +101,7 @@ Value Var::eval(Assoc &e) { // evaluation of variable
                 return ProcedureV(it->second.second, it->second.first, e);
             }
       }
+        throw RuntimeError("Undefined variable: " + x);
     }
     return matched_value;
 }
